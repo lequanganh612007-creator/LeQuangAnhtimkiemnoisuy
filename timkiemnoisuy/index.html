@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thuật Toán Tìm Kiếm Nội Suy (Interpolation Search) - DSA Visualizer</title>
+  <meta name="description" content="Trang web trực quan hóa và học tập thuật toán Tìm kiếm Nội suy (Interpolation Search) trong môn Cấu trúc dữ liệu và Giải thuật.">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Ambient Light Effects -->
+  <div class="ambient-glow-1"></div>
+  <div class="ambient-glow-2"></div>
+
+  <!-- Fullscreen Confetti Particle Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ==========================================
+       HEADER & NAVIGATION
+       ========================================== -->
+  <header>
+    <div class="container nav-container">
+      <a href="#" class="logo">
+        <div class="logo-icon">🔍</div>
+        <span>Interpolation<span style="color: var(--accent-cyan);">Search</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#theory">Lý thuyết & Công thức</a></li>
+        <li><a href="#visualizer">Mô phỏng trực quan</a></li>
+        <li><a href="#video-showcase">🎬 Video & Hoạt họa</a></li>
+        <li><a href="#comparison">So sánh Binary Search</a></li>
+        <li><a href="#code">Mã nguồn</a></li>
+        <li><a href="#quiz">Trắc nghiệm</a></li>
+      </ul>
+      <div class="nav-controls">
+        <button id="soundToggleBtn" class="sound-toggle-btn active" title="Bật/Tắt hiệu ứng âm thanh">
+          🔊 Âm thanh: Bật
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       HERO SECTION: FORMULA SPOTLIGHT
+       ========================================== -->
+  <main class="container">
+    <section class="hero reveal-item">
+      <div class="hero-tag">⚡ Cấu Trúc Dữ Liệu & Giải Thuật (DSA)</div>
+      <h1>Thuật Toán <span class="highlight">Tìm Kiếm Nội Suy</span></h1>
+      <p>
+        Kỹ thuật tìm kiếm siêu tốc độ $O(\log(\log n))$ bằng cách ước lượng vị trí mục tiêu dựa trên tỷ lệ giá trị, tương tự như phản xạ tự nhiên của con người khi tra từ điển.
+      </p>
+
+      <!-- Hero Formula Card -->
+      <div class="formula-hero-card reveal-item" data-delay="1">
+        <div class="formula-title-banner">
+          <span>✨</span> Công Thức Toán Học Tính Vị Trí Dự Đoán (pos) <span>✨</span>
+        </div>
+        
+        <div class="formula-display" id="heroFormulaKatex">
+          $$pos = low + \left\lfloor \frac{x - arr[low]}{arr[high] - arr[low]} \times (high - low) \right\rfloor$$
+        </div>
+
+        <div class="formula-variables-grid">
+          <div class="var-pill">
+            <span class="var-symbol x">x</span>
+            <span><strong>Giá trị cần tìm</strong></span>
+          </div>
+          <div class="var-pill">
+            <span class="var-symbol low">low</span>
+            <span><strong>Vị trí chỉ số đầu</strong></span>
+          </div>
+          <div class="var-pill">
+            <span class="var-symbol high">high</span>
+            <span><strong>Vị trí chỉ số cuối</strong></span>
+          </div>
+          <div class="var-pill">
+            <span class="var-symbol arr-low">arr[low]</span>
+            <span><strong>Giá trị tại đầu mảng</strong></span>
+          </div>
+          <div class="var-pill">
+            <span class="var-symbol arr-high">arr[high]</span>
+            <span><strong>Giá trị tại cuối mảng</strong></span>
+          </div>
+          <div class="var-pill">
+            <span class="var-symbol pos">pos</span>
+            <span><strong>Vị trí chỉ số dự đoán</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 1: LÝ THUYẾT & BẢN CHẤT TOÁN HỌC
+         ========================================== -->
+    <section id="theory" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          Bản Chất Toán Học & Cơ Chế Hoạt Động
+          <span class="badge">Lý thuyết</span>
+        </h2>
+        <p class="section-subtitle">
+          Tìm hiểu sâu nguyên lý hoạt động, tại sao phép chia tỷ lệ lại giúp nhảy vọt đến sát đích cần tìm.
+        </p>
+      </div>
+
+      <div class="theory-grid">
+        <!-- Card 1: Ý tưởng tra từ điển -->
+        <div class="card reveal-item" data-delay="1">
+          <div class="card-icon cyan">📖</div>
+          <h3>Ý Tưởng Thực Tế Tuyệt Vời</h3>
+          <p>
+            Giả sử bạn cần tìm từ <strong>"Zebra"</strong> trong cuốn từ điển:
+          </p>
+          <ul>
+            <li><strong>Binary Search:</strong> Mở cơ học ở chính giữa ($mid = (low + high) / 2$), bất chấp từ bắt đầu bằng chữ cái gì.</li>
+            <li><strong>Interpolation Search:</strong> Vì biết chữ cái <code>'Z'</code> nằm sát cuối bảng chữ cái, bạn sẽ lật ngay vào những trang cuối cùng!</li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Phân tích phân số tỷ lệ -->
+        <div class="card reveal-item" data-delay="2">
+          <div class="card-icon purple">⚖️</div>
+          <h3>Ý Nghĩa Phân Số Tỷ Lệ</h3>
+          <p>
+            Trái tim của thuật toán là tỷ lệ phần trăm:
+          </p>
+          <div style="text-align: center; margin: 12px 0; font-size: 1.2rem; color: #f472b6;">
+            $$\text{Tỷ lệ} = \frac{x - arr[low]}{arr[high] - arr[low]}$$
+          </div>
+          <p>
+            Phân số này cho biết giá trị $x$ nằm ở mốc bao nhiêu % trên toàn bộ dải giá trị $[arr[low], arr[high]]$, từ đó nhân với khoảng cách chỉ số $(high - low)$.
+          </p>
+        </div>
+
+        <!-- Card 3: Điều kiện áp dụng -->
+        <div class="card reveal-item" data-delay="3">
+          <div class="card-icon amber">⚠️</div>
+          <h3>Điều Kiện Bắt Buộc</h3>
+          <ul>
+            <li><strong>Mảng đã sắp xếp:</strong> Mảng bắt buộc phải có thứ tự tăng dần.</li>
+            <li><strong>Phân bố đồng đều:</strong> Tối ưu nhất khi các phần tử cách đều nhau (cấp số cộng hoặc tuyến tính).</li>
+            <li><strong>Tránh chia cho 0:</strong> Nếu $arr[high] == arr[low]$, mẫu số bằng 0. Cần kiểm tra điều kiện này trước khi chia.</li>
+          </ul>
+        </div>
+
+        <!-- Card 4: Chứng minh hình học (Full Width) -->
+        <div class="card math-derivation reveal-item" data-delay="4">
+          <div class="card-icon emerald">📐</div>
+          <h3>Chứng Minh Hình Học Từ Phương Trình Tuyến Tính</h3>
+          <p>
+            Giả định mối quan hệ giữa chỉ số phần tử $i$ (trục hoành) và giá trị $arr[i]$ (trục tung) xấp xỉ một đường thẳng đi qua 2 điểm mốc:
+            $A(low, arr[low])$ và $B(high, arr[high])$.
+          </p>
+
+          <div class="math-steps">
+            <div class="math-step-item">
+              <h4>1. Hệ số góc (Độ dốc k)</h4>
+              <p>Hệ số góc của đường thẳng nối $A$ và $B$ là:</p>
+              <div style="font-family: var(--font-mono); margin: 6px 0; color: #fff;">
+                $$k = \frac{arr[high] - arr[low]}{high - low}$$
+              </div>
+            </div>
+
+            <div class="math-step-item">
+              <h4>2. Điểm ước lượng P(pos, x)</h4>
+              <p>Điểm $P(pos, x)$ nằm trên cùng đường thẳng, do đó độ dốc phải bằng nhau:</p>
+              <div style="font-family: var(--font-mono); margin: 6px 0; color: #fff;">
+                $$\frac{x - arr[low]}{pos - low} = \frac{arr[high] - arr[low]}{high - low}$$
+              </div>
+            </div>
+
+            <div class="math-step-item">
+              <h4>3. Rút ra biểu thức pos</h4>
+              <p>Giải phương trình tìm ẩn $pos$ và lấy phần nguyên sàn:</p>
+              <div style="font-family: var(--font-mono); margin: 6px 0; color: #34d399; font-weight: bold;">
+                $$pos = low + \left\lfloor \frac{x - arr[low]}{arr[high] - arr[low]} \times (high - low) \right\rfloor$$
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng độ phức tạp -->
+      <div class="comparison-table-wrapper reveal-item">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Thuật toán</th>
+              <th>Tốt nhất (Best)</th>
+              <th>Trung bình (Average)</th>
+              <th>Xấu nhất (Worst)</th>
+              <th>Bộ nhớ phụ (Space)</th>
+              <th>Điều kiện tối ưu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Interpolation Search</strong></td>
+              <td><span class="complexity-badge badge-fast">O(1)</span></td>
+              <td><span class="complexity-badge badge-fast">O(log(log n))</span></td>
+              <td><span class="complexity-badge badge-slow">O(n)</span></td>
+              <td><span class="complexity-badge badge-fast">O(1)</span></td>
+              <td>Mảng sắp xếp, giá trị phân bố tương đối đều</td>
+            </tr>
+            <tr>
+              <td><strong>Binary Search</strong></td>
+              <td><span class="complexity-badge badge-fast">O(1)</span></td>
+              <td><span class="complexity-badge badge-mid">O(log n)</span></td>
+              <td><span class="complexity-badge badge-mid">O(log n)</span></td>
+              <td><span class="complexity-badge badge-fast">O(1)</span></td>
+              <td>Mảng đã sắp xếp (không phụ thuộc phân bố)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 2: TRÌNH MÔ PHỎNG TRỰC QUAN (VISUALIZER)
+         ========================================== -->
+    <section id="visualizer" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          Trình Mô Phỏng Trực Quan Tương Tác
+          <span class="badge">Live Simulator</span>
+        </h2>
+        <p class="section-subtitle">
+          Chạy từng bước thuật toán, quan sát các con trỏ chuyển dịch và công thức thay số thực tế theo thời gian thực.
+        </p>
+      </div>
+
+      <div class="visualizer-card">
+        <!-- 4 góc phát quang Sci-Fi HUD Corners -->
+        <div class="hud-corner hud-corner-tl"></div>
+        <div class="hud-corner hud-corner-tr"></div>
+        <div class="hud-corner hud-corner-bl"></div>
+        <div class="hud-corner hud-corner-br"></div>
+
+        <!-- Bảng thông số Telemetry HUD thời gian thực -->
+        <div class="hud-telemetry-bar">
+          <div class="hud-telemetry-item">
+            <div class="telemetry-led idle" id="hudTelemetryLed"></div>
+            <span class="telemetry-label">HỆ THỐNG:</span>
+            <span class="telemetry-val" id="hudStatusVal">STANDBY</span>
+          </div>
+          <div class="hud-telemetry-item">
+            <span class="telemetry-label">DẢI TÌM:</span>
+            <span class="telemetry-val" id="hudRangeVal">[0 .. 11]</span>
+          </div>
+          <div class="hud-telemetry-item">
+            <span class="telemetry-label">HỆ SỐ GÓC (SLOPE):</span>
+            <span class="telemetry-val" id="hudSlopeVal">k = -</span>
+          </div>
+          <div class="hud-telemetry-item">
+            <span class="telemetry-label">THU HẸP DẢI:</span>
+            <span class="telemetry-val" id="hudReductionVal">0% loại bỏ</span>
+          </div>
+          <div class="hud-telemetry-item">
+            <span class="telemetry-label">VỊ TRÍ KHÓA (POS):</span>
+            <span class="telemetry-val" id="hudPosVal" style="color: var(--pos-color);">-</span>
+          </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+          <div class="control-group">
+            <label class="control-label">Dữ liệu mảng (Các số phân cách bởi dấu phẩy hoặc khoảng trắng)</label>
+            <div class="input-row">
+              <input type="text" id="customArrayInput" class="input-field" placeholder="Ví dụ: 10, 18, 26, 34, 42, 50, 58...">
+              <button id="btnApplyArray" class="btn btn-secondary">Cập nhật mảng</button>
+            </div>
+            <div class="preset-buttons" style="margin-top: 8px;">
+              <span style="font-size: 0.82rem; color: var(--text-muted); align-self: center;">Bộ dữ liệu mẫu:</span>
+              <button class="btn btn-secondary btn-sm preset-btn" data-preset="uniform">Phân bố đều</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-preset="skewed">Phân bố lệch (Worst)</button>
+              <button class="btn btn-secondary btn-sm preset-btn" data-preset="fibonacci">Dãy Fibonacci</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Giá trị x cần tìm</label>
+            <div class="input-row">
+              <input type="number" id="targetXInput" class="input-field" placeholder="Nhập x..." style="max-width: 140px;">
+              <button id="btnReset" class="btn btn-secondary">↺ Đặt lại</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Playback Controller Bar -->
+        <div class="playback-bar">
+          <div class="playback-buttons">
+            <button id="btnPrev" class="btn btn-secondary" title="Phím tắt: Mũi tên trái">⏮ Lùi bước</button>
+            <button id="btnPlay" class="btn btn-primary" title="Phím tắt: Phím cách (Space)">▶ Chạy tự động</button>
+            <button id="btnNext" class="btn btn-secondary" title="Phím tắt: Mũi tên phải">Bước tiếp ⏭</button>
+          </div>
+
+          <div class="speed-control">
+            <span>Tốc độ phát:</span>
+            <input type="range" id="speedSlider" min="400" max="2200" value="1400" step="100">
+            <span id="speedLabel" style="font-family: var(--font-mono); color: #fff; min-width: 38px;">1.4x</span>
+          </div>
+        </div>
+
+        <!-- Array Node Display Container -->
+        <div class="array-container-box">
+          <div id="arrayNodesContainer"></div>
+        </div>
+
+        <!-- Live Formula Calculation Box -->
+        <div id="liveFormulaBox" class="live-calc-box">
+          <!-- Nội dung thay số thực tế được sinh động -->
+        </div>
+
+        <!-- Dual Grid: Geometric Plot Canvas + Trace Table -->
+        <div class="visualizer-dual-grid">
+          <!-- Canvas Trực quan hóa hình học -->
+          <div class="sub-panel reveal-item" data-delay="1">
+            <div class="sub-panel-title">
+              <span>📈</span> Bản Chất Hình Học Tuyến Tính (Radar Canvas)
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px;">
+              Đoạn thẳng phát sáng nối $(low, arr[low])$ và $(high, arr[high])$. Đường đứt nét hồng là giá trị $x$. Điểm giao nhau hạ vuông góc cho ta vị trí dự đoán $pos$.
+            </p>
+            <div class="canvas-container">
+              <canvas id="interpolationCanvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Bảng vết thực thi (Execution Step Trace) -->
+          <div class="sub-panel reveal-item" data-delay="2">
+            <div class="sub-panel-title">
+              <span>📋</span> Bảng Nhật Ký Từng Bước (Execution Trace)
+            </div>
+            <div class="log-table-wrapper">
+              <table class="log-table">
+                <thead>
+                  <tr>
+                    <th>Bước</th>
+                    <th>low</th>
+                    <th>high</th>
+                    <th>pos</th>
+                    <th>arr[pos]</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="stepLogTableBody">
+                  <!-- Dữ liệu từng bước được chèn động -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Mini-Game: Thử tài dự đoán pos -->
+        <div class="game-challenge-card reveal-item">
+          <div class="game-title">
+            <span>🎮 Thử Thách Tương Tác: Đoán Nhanh Vị Trí pos</span>
+            <span class="game-score-tag" id="gameScoreText">0 điểm</span>
+          </div>
+          <div id="gameChoicesContainer"></div>
+          <div id="gameResultFeedback"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION: VIDEO HOẠT HỌA & BÀI GIẢNG SINH ĐỘNG
+         ========================================== -->
+    <section id="video-showcase" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          Video Hoạt Họa & Bài Giảng Trực Quan
+          <span class="badge">Animation & Video</span>
+        </h2>
+        <p class="section-subtitle">
+          Theo dõi thước phim hoạt họa 4 cảnh giải thích bản chất hình học hoặc xem video bài giảng chuyên sâu sinh động.
+        </p>
+      </div>
+
+      <div class="video-showcase-card reveal-item">
+        <div class="video-tabs">
+          <button class="video-tab-btn active" data-target="canvas-story">
+            🎬 Phim Hoạt Họa Thuật Toán (Tương Tác Canvas)
+          </button>
+          <button class="video-tab-btn" data-target="youtube-lecture">
+            📺 Video Bài Giảng DSA Tham Khảo (YouTube Video)
+          </button>
+        </div>
+
+        <!-- Tab 1: Built-in Canvas Story Player -->
+        <div id="storyAnimWrapper" class="anim-player-wrapper">
+          <div class="anim-canvas-container">
+            <canvas id="storyCanvas"></canvas>
+          </div>
+          <div class="anim-player-controls">
+            <div class="anim-timeline-bar" title="Nhấp vào thanh để tua video">
+              <div id="storyTimelineFill" class="anim-timeline-fill"></div>
+            </div>
+            <div class="anim-controls-row">
+              <div style="display: flex; gap: 8px;">
+                <button id="btnStoryPlay" class="btn btn-primary btn-sm">▶ Xem video hoạt họa</button>
+                <button id="btnStoryRestart" class="btn btn-secondary btn-sm">↺ Bắt đầu lại</button>
+              </div>
+              <div id="storySubtitle" class="anim-subtitle-box">
+                Nhấn "Xem video hoạt họa" để bắt đầu theo dõi câu chuyện sinh động 4 phân cảnh!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Embedded YouTube Video -->
+        <div id="youtubeVideoWrapper" style="display: none;">
+          <div class="youtube-video-container">
+            <iframe 
+              src="https://www.youtube-nocookie.com/embed/bN0v951oF6w?rel=0&modestbranding=1" 
+              title="Interpolation Search Algorithm Visualized" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowfullscreen>
+            </iframe>
+          </div>
+          <p style="text-align: center; margin-top: 14px; font-size: 0.92rem; color: var(--text-secondary);">
+            💡 <em>Video mô phỏng từng bước thuật toán Tìm kiếm Nội suy (Interpolation Search) với minh họa đồ họa chuyển động sinh động.</em>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 3: SO SÁNH ĐỐI ĐẦU VỚI BINARY SEARCH
+         ========================================== -->
+    <section id="comparison" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          So Sánh Đối Đầu: Interpolation vs Binary Search
+          <span class="badge">Đọ sức</span>
+        </h2>
+        <p class="section-subtitle">
+          Quan sát trực quan sự chênh lệch số bước tìm kiếm giữa hai thuật toán trên cùng một mảng và giá trị $x$.
+        </p>
+      </div>
+
+      <div class="duel-container">
+        <!-- Card Interpolation -->
+        <div class="duel-card reveal-item" id="duelInterCard" data-delay="1">
+          <div class="duel-header">
+            <div>
+              <h3 style="color: var(--pos-color);">Tìm Kiếm Nội Suy</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Ước lượng theo phân số tỷ lệ</p>
+            </div>
+            <div class="duel-steps-count" id="interStepCount" style="color: var(--pos-color);">-</div>
+          </div>
+          <div class="duel-bar-wrapper">
+            <div id="interBarFill" class="duel-bar-fill" style="background: linear-gradient(90deg, #ec4899, #a855f7); width: 50%;"></div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 12px;">
+            Công thức: $pos = low + \left\lfloor \frac{x - arr[low]}{arr[high] - arr[low]} (high - low) \right\rfloor$
+          </p>
+        </div>
+
+        <!-- Card Binary -->
+        <div class="duel-card reveal-item" id="duelBinCard" data-delay="2">
+          <div class="duel-header">
+            <div>
+              <h3 style="color: var(--accent-cyan);">Tìm Kiếm Nhị Phân</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Chia đôi chính giữa không tính tỷ lệ</p>
+            </div>
+            <div class="duel-steps-count" id="binStepCount" style="color: var(--accent-cyan);">-</div>
+          </div>
+          <div class="duel-bar-wrapper">
+            <div id="binBarFill" class="duel-bar-fill" style="background: linear-gradient(90deg, #06b6d4, #6366f1); width: 80%;"></div>
+          </div>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 12px;">
+            Công thức: $mid = \left\lfloor \frac{low + high}{2} \right\rfloor$
+          </p>
+        </div>
+      </div>
+
+      <div id="duelSummaryText" class="reveal-item" data-delay="3" style="margin-top: 20px; text-align: center; font-size: 1.05rem; padding: 16px; background: rgba(7, 13, 25, 0.7); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <!-- Tóm tắt đối đầu -->
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 4: CÀI ĐẶT MÃ NGUỒN ĐA NGÔN NGỮ
+         ========================================== -->
+    <section id="code" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          Cài Đặt Mã Nguồn Chuẩn DSA
+          <span class="badge">Code Snippets</span>
+        </h2>
+        <p class="section-subtitle">
+          Code mẫu hoàn chỉnh cho C++, Python, Java và JavaScript với đầy đủ chú thích tiếng Việt.
+        </p>
+      </div>
+
+      <div class="code-box-card reveal-item">
+        <!-- Mac Window Style Top Bar -->
+        <div class="code-mac-header">
+          <div class="mac-dots">
+            <div class="mac-dot red"></div>
+            <div class="mac-dot yellow"></div>
+            <div class="mac-dot green"></div>
+          </div>
+          <div class="code-tabs">
+            <button class="code-tab-btn active" data-lang="cpp">💻 C++</button>
+            <button class="code-tab-btn" data-lang="python">🐍 Python</button>
+            <button class="code-tab-btn" data-lang="java">☕ Java</button>
+            <button class="code-tab-btn" data-lang="javascript">🌐 JavaScript</button>
+          </div>
+        </div>
+
+        <div class="code-actions">
+          <span class="code-lang-label" id="codeLangTag">C++</span>
+          <button id="btnCopyCode" class="btn btn-secondary btn-sm">📋 Sao chép mã</button>
+        </div>
+
+        <div class="code-content">
+          <pre><code id="codeSnippetArea"></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SECTION 5: TRẮC NGHIỆM CỦNG CỐ KIẾN THỨC
+         ========================================== -->
+    <section id="quiz" class="reveal-item">
+      <div class="section-header">
+        <h2 class="section-title">
+          Trắc Nghiệm Ôn Tập Kiến Thức
+          <span class="badge">Quiz</span>
+        </h2>
+        <p class="section-subtitle">
+          Kiểm tra độ hiểu biết của bạn về công thức, độ phức tạp và điều kiện áp dụng thuật toán.
+        </p>
+      </div>
+
+      <div class="quiz-card reveal-item">
+        <div id="quizQuestionsContainer">
+          <!-- Các câu hỏi sinh động -->
+        </div>
+
+        <div id="quizScoreBanner" class="quiz-score-banner"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       FOOTER
+       ========================================== -->
+  <footer>
+    <div class="container">
+      <p>Môn học: <strong>Cấu Trúc Dữ Liệu & Giải Thuật (DSA)</strong> • Chuyên đề: <em>Thuật Toán Tìm Kiếm</em></p>
+      <p style="margin-top: 8px; font-size: 0.85rem;">
+        Học viện Công Nghệ & Khoa Học Máy Tính • Thiết kế phục vụ giảng dạy và nghiên cứu thuật toán.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       SCRIPTS: KaTeX CDN & Custom Modules
+       ========================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false}
+        ],
+        throwOnError : false
+      });
+    });
+  </script>
+
+  <script src="js/algorithm.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/interactive-effects.js"></script>
+</body>
+</html>
