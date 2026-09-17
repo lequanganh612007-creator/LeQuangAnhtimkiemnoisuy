@@ -396,9 +396,12 @@ document.addEventListener('DOMContentLoaded', () => {
         steps.length
       );
 
-      // Phát âm thanh tương ứng
+      // Phát âm thanh và pháo hoa hạt sáng tương ứng
       if (currentStep.status === 'found') {
         sound.playFoundSound();
+        if (window.confettiCannon) {
+          window.confettiCannon.burst();
+        }
       } else if (currentStep.status === 'not_found') {
         sound.playNotFoundSound();
       } else {
