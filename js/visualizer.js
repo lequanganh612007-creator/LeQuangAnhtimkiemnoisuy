@@ -35,11 +35,13 @@ class Visualizer {
     if (!this.canvas) return;
     const rect = this.canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = rect.width * dpr;
-    this.canvas.height = rect.height * dpr;
-    this.ctx.scale(dpr, dpr);
-    this.displayWidth = rect.width;
-    this.displayHeight = rect.height;
+    const width = rect.width > 0 ? rect.width : 600;
+    const height = rect.height > 0 ? rect.height : 260;
+    this.canvas.width = width * dpr;
+    this.canvas.height = height * dpr;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.displayWidth = width;
+    this.displayHeight = height;
   }
 
   // Khởi tạo hiển thị mảng ban đầu với tương tác Click-to-Search và Tooltip
@@ -81,6 +83,7 @@ class Visualizer {
 
     this.arrayContainer.appendChild(wrapper);
     this.resetFormula();
+    this.resetTelemetryHUD(arr.length);
     if (this.tableBody) this.tableBody.innerHTML = '';
     this.drawGeometricPlot(arr, null);
   }
@@ -149,6 +152,14 @@ class Visualizer {
       }
     }
 
+    // 1b. Kích hoạt Laser Scanner quét tia sáng từ low đến pos
+    if (pos >= 0) {
+      this.triggerLaserScan(low, pos);
+    }
+
+    // 1c. Cập nhật thanh Telemetry HUD tương lai
+    this.updateTelemetryHUD(stepData, currentStepIdx, totalSteps, n);
+
     // 2. Cập nhật khối công thức toán học chi tiết kèm thước đo tỷ lệ neon
     this.renderLiveFormula(stepData, currentStepIdx, totalSteps);
 
@@ -157,6 +168,101 @@ class Visualizer {
 
     // 4. Cập nhật bảng vết
     this.highlightTableRow(currentStepIdx);
+  }
+
+  // Kích hoạt tia quét Laser neon lướt qua dải mảng
+  triggerLaserScan(fromIdx, toIdx) {
+    const wrapper = this.arrayContainer.querySelector('.array-nodes-wrapper');
+    if (!wrapper) return;
+
+    let laser = wrapper.querySelector('.laser-scan-line');
+    if (!laser) {
+      laser = document.createElement('div');
+      laser.className = 'laser-scan-line';
+      wrapper.appendChild(laser);
+    }
+
+    const fromNode = document.getElementById(`node-${fromIdx}`);
+    const toNode = document.getElementById(`node-${toIdx}`);
+    if (!fromNode || !toNode) return;
+
+    const fromLeft = fromNode.offsetLeft + fromNode.offsetWidth / 2;
+    const toLeft = toNode.offsetLeft + toNode.offsetWidth / 2;
+
+    laser.style.transition = 'none';
+    laser.style.left = `${fromLeft}px`;
+    laser.classList.add('active');
+
+    // Chuyển động lướt tia sáng đến toNode
+    requestAnimationFrame(() => {
+      laser.style.transition = 'left 0.45s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease';
+      laser.style.left = `${toLeft}px`;
+      setTimeout(() => {
+        laser.classList.remove('active');
+      }, 550);
+    });
+  }
+
+  // Cập nhật các chỉ số Telemetry HUD thời gian thực
+  updateTelemetryHUD(stepData, currentStepIdx, totalSteps, totalElements) {
+    const led = document.getElementById('hudTelemetryLed');
+    const statusVal = document.getElementById('hudStatusVal');
+    const rangeVal = document.getElementById('hudRangeVal');
+    const slopeVal = document.getElementById('hudSlopeVal');
+    const reductionVal = document.getElementById('hudReductionVal');
+    const posVal = document.getElementById('hudPosVal');
+
+    const { status, low, high, pos, arrLow, arrHigh } = stepData;
+
+    // Tính tỷ lệ không gian bị loại bỏ
+    const remainingCount = Math.max(0, high - low + 1);
+    const reductionRate = Math.round(((totalElements - remainingCount) / totalElements) * 100);
+
+    // Hệ số góc đường nội suy k = deltaY / deltaX
+    let slope = '-';
+    if (high !== low && arrHigh !== undefined && arrLow !== undefined) {
+      slope = ((arrHigh - arrLow) / (high - low)).toFixed(2);
+    }
+
+    if (led) {
+      led.className = 'telemetry-led';
+      if (status === 'found') led.style.background = 'var(--accent-emerald)';
+      else if (status === 'calculating') led.classList.add('calculating');
+      else led.classList.add('idle');
+    }
+
+    if (statusVal) {
+      if (status === 'found') statusVal.innerHTML = '<span style="color: #34d399;">🎯 LOCKED & FOUND</span>';
+      else if (status === 'narrow_right') statusVal.innerHTML = '<span style="color: #fb923c;">⏩ NARROW_RIGHT</span>';
+      else if (status === 'narrow_left') statusVal.innerHTML = '<span style="color: #60a5fa;">⏪ NARROW_LEFT</span>';
+      else if (status === 'not_found') statusVal.innerHTML = '<span style="color: #f87171;">❌ TERMINATED</span>';
+      else statusVal.textContent = 'CALCULATING_POS';
+    }
+
+    if (rangeVal) rangeVal.textContent = `[${low} .. ${high}]`;
+    if (slopeVal) slopeVal.textContent = `k = ${slope}`;
+    if (reductionVal) reductionVal.textContent = `${reductionRate}% loại bỏ`;
+    if (posVal) posVal.textContent = pos >= 0 ? `[${pos}]` : '-';
+  }
+
+  // Đặt lại Telemetry HUD về trạng thái chờ
+  resetTelemetryHUD(totalElements = 12) {
+    const led = document.getElementById('hudTelemetryLed');
+    const statusVal = document.getElementById('hudStatusVal');
+    const rangeVal = document.getElementById('hudRangeVal');
+    const slopeVal = document.getElementById('hudSlopeVal');
+    const reductionVal = document.getElementById('hudReductionVal');
+    const posVal = document.getElementById('hudPosVal');
+
+    if (led) {
+      led.className = 'telemetry-led idle';
+      led.style.background = '';
+    }
+    if (statusVal) statusVal.innerHTML = '<span style="color: #38bdf8;">STANDBY (READY)</span>';
+    if (rangeVal) rangeVal.textContent = `[0 .. ${totalElements - 1}]`;
+    if (slopeVal) slopeVal.textContent = 'k = -';
+    if (reductionVal) reductionVal.textContent = '0% loại bỏ';
+    if (posVal) posVal.textContent = '-';
   }
 
   // Render công thức chi tiết
@@ -367,6 +473,30 @@ class Visualizer {
       const highX = getXCoord(high);
       const highY = getYCoord(arrHigh);
 
+      // Vùng tìm kiếm bị loại bỏ được phủ màng tối Sci-Fi Exclusion Mask
+      if (low > 0) {
+        ctx.fillStyle = 'rgba(2, 6, 14, 0.65)';
+        ctx.fillRect(padLeft, padTop, lowX - padLeft, plotH);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(lowX, padTop);
+        ctx.lineTo(lowX, padTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (high < n - 1) {
+        ctx.fillStyle = 'rgba(2, 6, 14, 0.65)';
+        ctx.fillRect(highX, padTop, padLeft + plotW - highX, plotH);
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.35)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(highX, padTop);
+        ctx.lineTo(highX, padTop + plotH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
       // Đường thẳng nội suy với gradient phát sáng (Cyber glow)
       const grad = ctx.createLinearGradient(lowX, lowY, highX, highY);
       grad.addColorStop(0, '#06b6d4');
@@ -374,20 +504,35 @@ class Visualizer {
       grad.addColorStop(1, '#f59e0b');
 
       ctx.save();
-      ctx.shadowColor = 'rgba(168, 85, 247, 0.6)';
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = 'rgba(168, 85, 247, 0.7)';
+      ctx.shadowBlur = 14;
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 3.5;
       ctx.beginPath();
       ctx.moveTo(lowX, lowY);
       ctx.lineTo(highX, highY);
       ctx.stroke();
       ctx.restore();
 
+      // Vẽ các hạt photon năng lượng di chuyển dọc theo đường nội suy
+      const photonFractions = [0.2, 0.45, 0.7, 0.9];
+      photonFractions.forEach(frac => {
+        const px = lowX + (highX - lowX) * frac;
+        const py = lowY + (highY - lowY) * frac;
+        ctx.save();
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
       // Vòng tròn halo cho điểm Low
       ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
       ctx.beginPath();
-      ctx.arc(lowX, lowY, 12, 0, Math.PI * 2);
+      ctx.arc(lowX, lowY, 14, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#06b6d4';
@@ -397,12 +542,12 @@ class Visualizer {
 
       ctx.fillStyle = '#06b6d4';
       ctx.font = 'bold 11px monospace';
-      ctx.fillText(`low(${low})`, lowX - 16, lowY - 14);
+      ctx.fillText(`low(${low})`, lowX - 16, lowY - 16);
 
       // Vòng tròn halo cho điểm High
       ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
       ctx.beginPath();
-      ctx.arc(highX, highY, 12, 0, Math.PI * 2);
+      ctx.arc(highX, highY, 14, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#f59e0b';
@@ -412,16 +557,16 @@ class Visualizer {
 
       ctx.fillStyle = '#f59e0b';
       ctx.font = 'bold 11px monospace';
-      ctx.fillText(`high(${high})`, highX - 22, highY - 14);
+      ctx.fillText(`high(${high})`, highX - 22, highY - 16);
 
       // Đường nằm ngang mục tiêu y = x
       const targetY = getYCoord(x);
       ctx.save();
-      ctx.shadowColor = 'rgba(236, 72, 153, 0.6)';
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(236, 72, 153, 0.7)';
+      ctx.shadowBlur = 10;
       ctx.strokeStyle = '#ec4899';
       ctx.setLineDash([5, 4]);
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(padLeft, targetY);
       ctx.lineTo(padLeft + plotW, targetY);
@@ -433,32 +578,49 @@ class Visualizer {
       ctx.font = 'bold 11px monospace';
       ctx.fillText(`Mục tiêu x = ${x}`, padLeft + 8, targetY - 8);
 
-      // Gióng vuông góc xuống pos
+      // Gióng vuông góc xuống pos và vẽ Holographic Crosshair Target
       if (pos >= 0 && pos < n) {
         const posX = getXCoord(pos);
         ctx.strokeStyle = '#ec4899';
         ctx.setLineDash([3, 3]);
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.moveTo(posX, padTop);
         ctx.lineTo(posX, padTop + plotH);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Điểm giao nội suy pos
+        // Vẽ Holographic Radar Crosshair tại giao điểm
         ctx.save();
         ctx.shadowColor = '#ec4899';
-        ctx.shadowBlur = 15;
-        ctx.fillStyle = '#ec4899';
+        ctx.shadowBlur = 18;
+
+        // Vòng ngoài Crosshair
+        ctx.strokeStyle = '#ec4899';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.arc(posX, targetY, 7.5, 0, Math.PI * 2);
+        ctx.arc(posX, targetY, 14, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 4 vạch ngắm chữ thập
+        ctx.beginPath();
+        ctx.moveTo(posX - 18, targetY); ctx.lineTo(posX - 8, targetY);
+        ctx.moveTo(posX + 8, targetY); ctx.lineTo(posX + 18, targetY);
+        ctx.moveTo(posX, targetY - 18); ctx.lineTo(posX, targetY - 8);
+        ctx.moveTo(posX, targetY + 8); ctx.lineTo(posX, targetY + 18);
+        ctx.stroke();
+
+        // Tâm điểm rực sáng
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(posX, targetY, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // Nhãn pos ở đáy trục hoành
+        // Nhãn HUD khóa mục tiêu
         ctx.fillStyle = '#ec4899';
         ctx.font = 'bold 12px monospace';
-        ctx.fillText(`pos = ${pos}`, posX - 26, padTop + plotH + 22);
+        ctx.fillText(`🎯 pos = ${pos}`, posX - 28, padTop + plotH + 24);
       }
     }
 

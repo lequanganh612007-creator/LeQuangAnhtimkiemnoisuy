@@ -740,4 +740,34 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCode('cpp');
   initSimulation();
   renderQuiz();
+
+  // ==========================================
+  // SCROLL REVEAL ANIMATION SYSTEM
+  // ==========================================
+  const revealElements = document.querySelectorAll('.reveal-item');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -30px 0px'
+    });
+
+    revealElements.forEach(el => observer.observe(el));
+  } else {
+    revealElements.forEach(el => el.classList.add('revealed'));
+  }
+
+  // Kích hoạt ngay các phần tử đã nằm trong màn hình ban đầu
+  revealElements.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight) {
+      el.classList.add('revealed');
+    }
+  });
 });
