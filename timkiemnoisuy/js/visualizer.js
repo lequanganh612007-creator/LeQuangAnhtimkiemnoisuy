@@ -144,11 +144,18 @@ class Visualizer {
       }
     }
 
-    // Cuộn mượt đến phần tử pos nếu cần
+    // Chỉ cuộn ngang nội bộ trong khung chứa mảng nếu bị tràn, TUYỆT ĐỐI không cuộn trang web
     if (pos >= 0) {
       const posNode = document.getElementById(`node-${pos}`);
-      if (posNode) {
-        posNode.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      const containerBox = this.arrayContainer.closest('.array-container-box') || this.arrayContainer;
+      if (posNode && containerBox && containerBox.scrollWidth > containerBox.clientWidth) {
+        const nodeLeft = posNode.offsetLeft;
+        const nodeWidth = posNode.offsetWidth;
+        const containerWidth = containerBox.clientWidth;
+        containerBox.scrollTo({
+          left: nodeLeft - (containerWidth / 2) + (nodeWidth / 2),
+          behavior: 'smooth'
+        });
       }
     }
 
@@ -767,7 +774,11 @@ class Visualizer {
     const currentTr = document.getElementById(`trace-row-${currentStepIdx}`);
     if (currentTr) {
       currentTr.classList.add('current-step');
-      currentTr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Chỉ cuộn nội bộ trong khung bảng nhật ký, TUYỆT ĐỐI không cuộn trang web
+      const tableWrapper = this.tableBody.closest('.log-table-wrapper');
+      if (tableWrapper && tableWrapper.scrollHeight > tableWrapper.clientHeight) {
+        tableWrapper.scrollTop = currentTr.offsetTop - tableWrapper.offsetTop;
+      }
     }
   }
 }
