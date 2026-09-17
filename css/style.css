@@ -316,11 +316,12 @@ header {
 }
 
 .formula-display {
-  font-size: 1.85rem;
+  font-size: clamp(1.15rem, 3.2vw, 1.85rem);
   padding: 16px 0;
   overflow-x: auto;
   color: #fff;
   text-align: center;
+  -webkit-overflow-scrolling: touch;
 }
 
 .formula-variables-grid {
@@ -477,7 +478,7 @@ section {
 
 .math-steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
   margin-top: 20px;
 }
@@ -488,6 +489,40 @@ section {
   border-radius: var(--radius-md);
   border-left: 4px solid var(--accent-cyan);
   transition: transform 0.2s;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.math-step-featured {
+  grid-column: 1 / -1;
+  border-left-color: var(--accent-emerald) !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(7, 13, 25, 0.85) 100%) !important;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+}
+
+.math-formula-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 0;
+  max-width: 100%;
+}
+
+.math-formula-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+
+.math-formula-scroll::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.4);
+  border-radius: 3px;
+}
+
+/* Đảm bảo toàn bộ công thức KaTeX không bao giờ bị cắt xén */
+.katex-display {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 6px 0 !important;
+  max-width: 100% !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .math-step-item:hover {
@@ -1085,6 +1120,89 @@ section {
   color: var(--text-secondary);
   border-top: 1px dashed var(--border-color);
   padding-top: 12px;
+}
+
+/* Formula 4-Card Visual Breakdown Grid */
+.formula-breakdown-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 18px 0 14px;
+}
+
+.f-card {
+  background: rgba(13, 22, 38, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.f-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+
+.f-card .f-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.f-card .f-value {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.f-card .f-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.f-card.f-base {
+  border-color: rgba(6, 182, 212, 0.45);
+}
+.f-card.f-base .f-value { color: var(--low-color); }
+
+.f-card.f-ratio {
+  border-color: rgba(236, 72, 153, 0.45);
+}
+.f-card.f-ratio .f-value { color: #f472b6; }
+
+.f-card.f-span {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+.f-card.f-span .f-value { color: var(--high-color); }
+
+.f-card.f-pos {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(13, 22, 38, 0.9) 100%);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+.f-card.f-pos .f-value { color: #34d399; }
+
+/* Trực giác giải thuật banner */
+.live-calc-intuition {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-top: 14px;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #e2e8f0;
 }
 
 /* Dual Grid: Canvas Plot + Step Log */

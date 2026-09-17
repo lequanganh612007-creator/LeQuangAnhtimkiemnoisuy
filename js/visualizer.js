@@ -345,6 +345,34 @@ class Visualizer {
           <strong>5. Vị trí dự đoán:</strong>
           <code>pos = ${low} + ${posOffset} = <span class="highlight-val hl-pos" data-node="${pos}">${pos}</span> ⇒ arr[${pos}] = <strong style="color: #fff; font-size: 1.15rem;">${arrPos}</strong></code>
         </div>
+
+        <!-- Thẻ giải phẫu 4 bước toán học trực quan -->
+        <div class="formula-breakdown-cards">
+          <div class="f-card f-base highlight-val" data-node="${low}" title="Chỉ số mốc bắt đầu của dải tìm kiếm">
+            <div class="f-label">1. MỐC BẮT ĐẦU (low)</div>
+            <div class="f-value">[${low}]</div>
+            <div class="f-sub">Giá trị mốc = <strong>${arrLow}</strong></div>
+          </div>
+          <div class="f-card f-ratio" title="Tỷ lệ % của khoảng cách mục tiêu">
+            <div class="f-label">2. TỶ LỆ DỰ ĐOÁN (ratio)</div>
+            <div class="f-value">${ratioPercent}%</div>
+            <div class="f-sub">Δx / Δdải = ${numerator} / ${denominator}</div>
+          </div>
+          <div class="f-card f-span" title="Số lượng phần tử trong dải tìm kiếm hiện tại">
+            <div class="f-label">3. ĐỘ DÀI DẢI (high - low)</div>
+            <div class="f-value">${high - low} ô</div>
+            <div class="f-sub">Khoảng [${low}] đến [${high}]</div>
+          </div>
+          <div class="f-card f-pos highlight-val" data-node="${pos}" title="Vị trí phần tử nội suy dự đoán">
+            <div class="f-label">4. VỊ TRÍ KHÓA (pos)</div>
+            <div class="f-value">[${pos}]</div>
+            <div class="f-sub">arr[${pos}] = <strong>${arrPos}</strong> (dịch +${posOffset})</div>
+          </div>
+        </div>
+
+        <div class="live-calc-intuition">
+          💡 <strong>Trực giác giải thuật:</strong> Mục tiêu <code>x = ${x}</code> nằm ở mốc <strong>${ratioPercent}%</strong> trên dải giá trị từ <code>${arrLow}</code> đến <code>${arrHigh}</code>. Phép nội suy tính ngay độ dịch <code>+${posOffset}</code> ô tính từ mốc <code>low=${low}</code>, cho ra chỉ số kiểm tra <strong>pos = [${pos}]</strong> thay vì phải chia đôi chính giữa một cách máy móc!
+        </div>
       </div>
       <div class="calc-explanation">
         <strong>Kết luận rẽ nhánh:</strong> ${comparisonHTML}
