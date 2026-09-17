@@ -293,89 +293,161 @@ class Visualizer {
     const ratioPercent = (ratio * 100).toFixed(1);
     const meterPercent = Math.max(0, Math.min(100, ratio * 100));
 
-    let comparisonHTML = '';
+    let decisionHTML = '';
     if (status === 'found') {
-      comparisonHTML = `<span style="color: #34d399; font-weight: 800; font-size: 1.05rem;">✔ arr[pos] (${arrPos}) === x (${x}) ⇒ TÌM THẤY TẠI VỊ TRÍ ${pos}!</span>`;
+      decisionHTML = `
+        <div class="decision-result success">
+          <div class="decision-icon">🎯</div>
+          <div class="decision-text">
+            <h4>CHÍNH XÁC! TÌM THẤY MỤC TIÊU!</h4>
+            <p>Giá trị tại <code>arr[${pos}] = ${arrPos}</code> trùng khớp 100% với mục tiêu <code>x = ${x}</code>.</p>
+            <div class="decision-stat">🏆 Hoàn thành tìm kiếm xuất sắc sau đúng <strong>${currentStepIdx + 1} bước</strong> nội suy!</div>
+          </div>
+        </div>
+      `;
     } else if (status === 'narrow_right') {
-      comparisonHTML = `<span style="color: #fb923c; font-weight: 600;">arr[pos] (${arrPos}) &lt; x (${x}) ⇒ Thu hẹp sang nửa phải: low = pos + 1 = ${pos + 1}</span>`;
+      decisionHTML = `
+        <div class="decision-result narrow-right">
+          <div class="decision-icon">⏩</div>
+          <div class="decision-text">
+            <h4>arr[${pos}] (${arrPos}) &lt; x (${x}) ⇒ Thu Hẹp Sang Nửa Phải</h4>
+            <p>Vì mảng đã sắp xếp tăng dần, toàn bộ các phần tử từ chỉ số <code>0</code> đến <code>${pos}</code> chắc chắn đều nhỏ hơn <code>${x}</code> và bị loại bỏ ngay lập tức!</p>
+            <div class="decision-next-step">Cập nhật dải mới: <code>low = pos + 1 = ${pos + 1}</code></div>
+          </div>
+        </div>
+      `;
     } else if (status === 'narrow_left') {
-      comparisonHTML = `<span style="color: #60a5fa; font-weight: 600;">arr[pos] (${arrPos}) &gt; x (${x}) ⇒ Thu hẹp sang nửa trái: high = pos - 1 = ${pos - 1}</span>`;
+      decisionHTML = `
+        <div class="decision-result narrow-left">
+          <div class="decision-icon">⏪</div>
+          <div class="decision-text">
+            <h4>arr[${pos}] (${arrPos}) &gt; x (${x}) ⇒ Thu Hẹp Sang Nửa Trái</h4>
+            <p>Vì mảng đã sắp xếp tăng dần, toàn bộ các phần tử từ chỉ số <code>${pos}</code> đến cuối mảng chắc chắn đều lớn hơn <code>${x}</code> và bị loại bỏ ngay lập tức!</p>
+            <div class="decision-next-step">Cập nhật dải mới: <code>high = pos - 1 = ${pos - 1}</code></div>
+          </div>
+        </div>
+      `;
     } else {
-      comparisonHTML = `<span>Đang thực hiện phép tính nội suy...</span>`;
+      decisionHTML = `<div class="decision-text"><p>${action}</p></div>`;
     }
 
     this.formulaContainer.innerHTML = `
       <div class="live-calc-header">
         <div class="calc-title">
-          <span>📐 THAY SỐ CÔNG THỨC THỰC TẾ (BƯỚC ${currentStepIdx + 1})</span>
+          <span>📐 MIÊU TẢ CHI TIẾT TỪNG BƯỚC THUẬT TOÁN (BƯỚC ${currentStepIdx + 1} / ${totalSteps})</span>
         </div>
-        <div class="calc-step-badge">Bước ${currentStepIdx + 1} / ${totalSteps}</div>
+        <div class="calc-step-badge">VÒNG LẶP ${currentStepIdx + 1}</div>
       </div>
-      <div class="calc-body">
-        <div class="calc-line">
-          <strong>1. Công thức:</strong> 
-          <code>pos = low + ⌊ ((x - arr[low]) / (arr[high] - arr[low])) × (high - low) ⌋</code>
-        </div>
-        <div class="calc-line">
-          <strong>2. Thế giá trị:</strong>
-          <code>pos = <span class="highlight-val hl-low" data-node="${low}">${low}</span> + ⌊ ((<span class="highlight-val hl-x">${x}</span> - <span class="highlight-val hl-low" data-node="${low}">${arrLow}</span>) / (<span class="highlight-val hl-high" data-node="${high}">${arrHigh}</span> - <span class="highlight-val hl-low" data-node="${low}">${arrLow}</span>)) × (<span class="highlight-val hl-high" data-node="${high}">${high}</span> - <span class="highlight-val hl-low" data-node="${low}">${low}</span>) ⌋</code>
-        </div>
-        <div class="calc-line">
-          <strong>3. Tỷ lệ nội suy:</strong>
-          <code>Tỷ lệ = (${numerator} / ${denominator}) = <span style="color: #38bdf8; font-weight: bold;">${ratio.toFixed(4)}</span> (${ratioPercent}% tổng độ dài dải giá trị)</code>
-        </div>
 
-        <!-- Thước đo tỷ lệ phần trăm trực quan sinh động -->
-        <div class="ratio-meter-box">
-          <div class="ratio-meter-header">
-            <span style="color: var(--low-color);">arr[low]: ${arrLow} (0%)</span>
-            <span style="color: #c084fc; font-weight: 800;">Mục tiêu x: ${x} (${ratioPercent}%)</span>
-            <span style="color: var(--high-color);">arr[high]: ${arrHigh} (100%)</span>
+      <div class="step-pipeline-container">
+        <!-- BƯỚC 1: XÁC ĐỊNH DẢI TÌM KIẾM -->
+        <div class="pipeline-step-card step-card-scope">
+          <div class="step-card-header">
+            <span class="step-num-badge">BƯỚC 1</span>
+            <span class="step-title">Xác Định Phạm Vi Hiện Tại</span>
           </div>
-          <div class="ratio-meter-track">
-            <div class="ratio-meter-fill" style="width: ${meterPercent}%;"></div>
-          </div>
-        </div>
-
-        <div class="calc-line" style="margin-top: 10px;">
-          <strong>4. Khoảng dịch:</strong>
-          <code>Offset = ⌊ ${ratio.toFixed(4)} × ${high - low} ⌋ = ⌊ ${(ratio * (high - low)).toFixed(2)} ⌋ = <span style="color: #c084fc; font-weight: bold;">${posOffset}</span></code>
-        </div>
-        <div class="calc-line">
-          <strong>5. Vị trí dự đoán:</strong>
-          <code>pos = ${low} + ${posOffset} = <span class="highlight-val hl-pos" data-node="${pos}">${pos}</span> ⇒ arr[${pos}] = <strong style="color: #fff; font-size: 1.15rem;">${arrPos}</strong></code>
-        </div>
-
-        <!-- Thẻ giải phẫu 4 bước toán học trực quan -->
-        <div class="formula-breakdown-cards">
-          <div class="f-card f-base highlight-val" data-node="${low}" title="Chỉ số mốc bắt đầu của dải tìm kiếm">
-            <div class="f-label">1. MỐC BẮT ĐẦU (low)</div>
-            <div class="f-value">[${low}]</div>
-            <div class="f-sub">Giá trị mốc = <strong>${arrLow}</strong></div>
-          </div>
-          <div class="f-card f-ratio" title="Tỷ lệ % của khoảng cách mục tiêu">
-            <div class="f-label">2. TỶ LỆ DỰ ĐOÁN (ratio)</div>
-            <div class="f-value">${ratioPercent}%</div>
-            <div class="f-sub">Δx / Δdải = ${numerator} / ${denominator}</div>
-          </div>
-          <div class="f-card f-span" title="Số lượng phần tử trong dải tìm kiếm hiện tại">
-            <div class="f-label">3. ĐỘ DÀI DẢI (high - low)</div>
-            <div class="f-value">${high - low} ô</div>
-            <div class="f-sub">Khoảng [${low}] đến [${high}]</div>
-          </div>
-          <div class="f-card f-pos highlight-val" data-node="${pos}" title="Vị trí phần tử nội suy dự đoán">
-            <div class="f-label">4. VỊ TRÍ KHÓA (pos)</div>
-            <div class="f-value">[${pos}]</div>
-            <div class="f-sub">arr[${pos}] = <strong>${arrPos}</strong> (dịch +${posOffset})</div>
+          <div class="step-card-body">
+            <div class="scope-tags-row">
+              <div class="scope-tag tag-start highlight-val" data-node="${low}">
+                <span class="lbl">ĐẦU DẢI (low):</span>
+                <strong>arr[${low}] = ${arrLow}</strong>
+              </div>
+              <div class="scope-arrow">➔</div>
+              <div class="scope-tag tag-target">
+                <span class="lbl">MỤC TIÊU CẦN TÌM (x):</span>
+                <strong>x = ${x}</strong>
+              </div>
+              <div class="scope-arrow">➔</div>
+              <div class="scope-tag tag-end highlight-val" data-node="${high}">
+                <span class="lbl">CUỐI DẢI (high):</span>
+                <strong>arr[${high}] = ${arrHigh}</strong>
+              </div>
+            </div>
+            <div class="scope-summary-text">
+              Phạm vi tìm kiếm đang gồm <strong>${high - low + 1}</strong> phần tử. Độ rộng dải giá trị: <code>${arrHigh} - ${arrLow} = ${denominator}</code>, khoảng cách chỉ số: <code>${high} - ${low} = ${high - low}</code>.
+            </div>
           </div>
         </div>
 
-        <div class="live-calc-intuition">
-          💡 <strong>Trực giác giải thuật:</strong> Mục tiêu <code>x = ${x}</code> nằm ở mốc <strong>${ratioPercent}%</strong> trên dải giá trị từ <code>${arrLow}</code> đến <code>${arrHigh}</code>. Phép nội suy tính ngay độ dịch <code>+${posOffset}</code> ô tính từ mốc <code>low=${low}</code>, cho ra chỉ số kiểm tra <strong>pos = [${pos}]</strong> thay vì phải chia đôi chính giữa một cách máy móc!
+        <!-- BƯỚC 2: TÍNH TỶ LỆ NỘI SUY -->
+        <div class="pipeline-step-card step-card-ratio">
+          <div class="step-card-header">
+            <span class="step-num-badge">BƯỚC 2</span>
+            <span class="step-title">Đo Tỷ Lệ Vị Trí Mục Tiêu (Interpolation Ratio)</span>
+            <span class="step-value-badge">${ratioPercent}%</span>
+          </div>
+          <div class="step-card-body">
+            <div class="ratio-equation-display">
+              <span class="eq-term">Tỷ lệ = </span>
+              <span class="eq-fraction">
+                <span class="num">x - arr[low]</span>
+                <span class="den">arr[high] - arr[low]</span>
+              </span>
+              <span class="eq-term"> = </span>
+              <span class="eq-fraction">
+                <span class="num">${x} - ${arrLow}</span>
+                <span class="den">${arrHigh} - ${arrLow}</span>
+              </span>
+              <span class="eq-term"> = </span>
+              <span class="eq-fraction">
+                <span class="num">${numerator}</span>
+                <span class="den">${denominator}</span>
+              </span>
+              <span class="eq-term"> = <strong>${ratio.toFixed(4)} (${ratioPercent}%)</strong></span>
+            </div>
+
+            <!-- Thước đo tỷ lệ trực quan -->
+            <div class="ratio-meter-box" style="margin-top: 10px;">
+              <div class="ratio-meter-header">
+                <span style="color: var(--low-color);">arr[low]: ${arrLow} (0%)</span>
+                <span style="color: #f472b6; font-weight: 800;">🎯 Điểm x=${x} (${ratioPercent}%)</span>
+                <span style="color: var(--high-color);">arr[high]: ${arrHigh} (100%)</span>
+              </div>
+              <div class="ratio-meter-track">
+                <div class="ratio-meter-fill" style="width: ${meterPercent}%;"></div>
+              </div>
+            </div>
+            <div class="step-note-text" style="margin-top: 8px;">
+              💡 <em>Ý nghĩa: Giá trị mục tiêu <code>x = ${x}</code> nằm ở mốc <strong>${ratioPercent}%</strong> trên tổng độ dài dải giá trị từ <code>${arrLow}</code> đến <code>${arrHigh}</code>.</em>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="calc-explanation">
-        <strong>Kết luận rẽ nhánh:</strong> ${comparisonHTML}
+
+        <!-- BƯỚC 3: DỰ ĐOÁN VỊ TRÍ pos -->
+        <div class="pipeline-step-card step-card-pos">
+          <div class="step-card-header">
+            <span class="step-num-badge">BƯỚC 3</span>
+            <span class="step-title">Dự Đoán Vị Trí Nhảy Đến (Calculate pos)</span>
+            <span class="step-value-badge pos-badge">pos = [${pos}]</span>
+          </div>
+          <div class="step-card-body">
+            <div class="pos-calc-flow">
+              <div class="calc-substep">
+                <span class="substep-lbl">1. Số ô cần dịch (Offset):</span>
+                <code>Offset = ⌊ ${ratioPercent}% × (${high} - ${low}) ⌋ = ⌊ ${(ratio * (high - low)).toFixed(2)} ⌋ = <strong style="color: #f472b6;">+${posOffset} ô</strong></code>
+              </div>
+              <div class="calc-substep">
+                <span class="substep-lbl">2. Chỉ số kiểm tra (pos):</span>
+                <code>pos = low + Offset = ${low} + ${posOffset} = <strong class="highlight-val hl-pos" data-node="${pos}">[${pos}]</strong></code>
+              </div>
+              <div class="calc-substep">
+                <span class="substep-lbl">3. Giá trị thực tế tại ô này:</span>
+                <code>arr[${pos}] = <strong style="color: #fff; font-size: 1.15rem;">${arrPos}</strong></code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BƯỚC 4: KẾT LUẬN & RẼ NHÁNH -->
+        <div class="pipeline-step-card step-card-decision">
+          <div class="step-card-header">
+            <span class="step-num-badge">BƯỚC 4</span>
+            <span class="step-title">So Sánh Trúng Đích & Quyết Định Rẽ Nhánh</span>
+          </div>
+          <div class="step-card-body">
+            ${decisionHTML}
+          </div>
+        </div>
       </div>
     `;
 
