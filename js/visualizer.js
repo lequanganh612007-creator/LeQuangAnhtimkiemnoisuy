@@ -42,7 +42,7 @@ class Visualizer {
     this.displayHeight = rect.height;
   }
 
-  // Khởi tạo hiển thị mảng ban đầu
+  // Khởi tạo hiển thị mảng ban đầu với tương tác Click-to-Search và Tooltip
   renderInitialArray(arr) {
     this.arrayContainer.innerHTML = '';
     const wrapper = document.createElement('div');
@@ -53,6 +53,10 @@ class Visualizer {
       node.className = 'array-node in-range';
       node.id = `node-${idx}`;
 
+      const tooltip = document.createElement('div');
+      tooltip.className = 'node-tooltip';
+      tooltip.textContent = `🎯 Nhấp để tìm ${val}`;
+
       const box = document.createElement('div');
       box.className = 'node-box';
       box.textContent = val;
@@ -61,8 +65,17 @@ class Visualizer {
       indexLabel.className = 'node-index';
       indexLabel.textContent = `[${idx}]`;
 
+      node.appendChild(tooltip);
       node.appendChild(box);
       node.appendChild(indexLabel);
+
+      // Tương tác nhấp chuột trực tiếp vào phần tử mảng để tìm kiếm
+      node.addEventListener('click', () => {
+        if (this.onSelectTarget) {
+          this.onSelectTarget(val);
+        }
+      });
+
       wrapper.appendChild(node);
     });
 
@@ -136,7 +149,7 @@ class Visualizer {
       }
     }
 
-    // 2. Cập nhật khối công thức toán học chi tiết
+    // 2. Cập nhật khối công thức toán học chi tiết kèm thước đo tỷ lệ neon
     this.renderLiveFormula(stepData, currentStepIdx, totalSteps);
 
     // 3. Vẽ biểu đồ hình học trên Canvas
@@ -172,6 +185,7 @@ class Visualizer {
 
     const { numerator, denominator, ratio, posOffset } = formulaCalc;
     const ratioPercent = (ratio * 100).toFixed(1);
+    const meterPercent = Math.max(0, Math.min(100, ratio * 100));
 
     let comparisonHTML = '';
     if (status === 'found') {
@@ -198,25 +212,64 @@ class Visualizer {
         </div>
         <div class="calc-line">
           <strong>2. Thế giá trị:</strong>
-          <code>pos = <span class="highlight-val hl-low">${low}</span> + ⌊ ((<span class="highlight-val hl-x">${x}</span> - <span class="highlight-val hl-low">${arrLow}</span>) / (<span class="highlight-val hl-high">${arrHigh}</span> - <span class="highlight-val hl-low">${arrLow}</span>)) × (<span class="highlight-val hl-high">${high}</span> - <span class="highlight-val hl-low">${low}</span>) ⌋</code>
+          <code>pos = <span class="highlight-val hl-low" data-node="${low}">${low}</span> + ⌊ ((<span class="highlight-val hl-x">${x}</span> - <span class="highlight-val hl-low" data-node="${low}">${arrLow}</span>) / (<span class="highlight-val hl-high" data-node="${high}">${arrHigh}</span> - <span class="highlight-val hl-low" data-node="${low}">${arrLow}</span>)) × (<span class="highlight-val hl-high" data-node="${high}">${high}</span> - <span class="highlight-val hl-low" data-node="${low}">${low}</span>) ⌋</code>
         </div>
         <div class="calc-line">
           <strong>3. Tỷ lệ nội suy:</strong>
           <code>Tỷ lệ = (${numerator} / ${denominator}) = <span style="color: #38bdf8; font-weight: bold;">${ratio.toFixed(4)}</span> (${ratioPercent}% tổng độ dài dải giá trị)</code>
         </div>
-        <div class="calc-line">
+
+        <!-- Thước đo tỷ lệ phần trăm trực quan sinh động -->
+        <div class="ratio-meter-box">
+          <div class="ratio-meter-header">
+            <span style="color: var(--low-color);">arr[low]: ${arrLow} (0%)</span>
+            <span style="color: #c084fc; font-weight: 800;">Mục tiêu x: ${x} (${ratioPercent}%)</span>
+            <span style="color: var(--high-color);">arr[high]: ${arrHigh} (100%)</span>
+          </div>
+          <div class="ratio-meter-track">
+            <div class="ratio-meter-fill" style="width: ${meterPercent}%;"></div>
+          </div>
+        </div>
+
+        <div class="calc-line" style="margin-top: 10px;">
           <strong>4. Khoảng dịch:</strong>
           <code>Offset = ⌊ ${ratio.toFixed(4)} × ${high - low} ⌋ = ⌊ ${(ratio * (high - low)).toFixed(2)} ⌋ = <span style="color: #c084fc; font-weight: bold;">${posOffset}</span></code>
         </div>
         <div class="calc-line">
           <strong>5. Vị trí dự đoán:</strong>
-          <code>pos = ${low} + ${posOffset} = <span class="highlight-val hl-pos">${pos}</span> ⇒ arr[${pos}] = <strong style="color: #fff; font-size: 1.15rem;">${arrPos}</strong></code>
+          <code>pos = ${low} + ${posOffset} = <span class="highlight-val hl-pos" data-node="${pos}">${pos}</span> ⇒ arr[${pos}] = <strong style="color: #fff; font-size: 1.15rem;">${arrPos}</strong></code>
         </div>
       </div>
       <div class="calc-explanation">
         <strong>Kết luận rẽ nhánh:</strong> ${comparisonHTML}
       </div>
     `;
+
+    // Gắn sự kiện rê chuột vào các số để làm sáng ô tương ứng trên mảng
+    this.bindFormulaHoverSync();
+  }
+
+  // Đồng bộ hiệu ứng hover giữa công thức và ô mảng
+  bindFormulaHoverSync() {
+    if (!this.formulaContainer) return;
+    const hlItems = this.formulaContainer.querySelectorAll('.highlight-val[data-node]');
+    hlItems.forEach(item => {
+      const targetIdx = item.getAttribute('data-node');
+      item.style.cursor = 'pointer';
+      item.addEventListener('mouseenter', () => {
+        const node = document.getElementById(`node-${targetIdx}`);
+        if (node) {
+          node.classList.add('is-pos');
+          node.style.transform = 'translateY(-14px) scale(1.15)';
+        }
+      });
+      item.addEventListener('mouseleave', () => {
+        const node = document.getElementById(`node-${targetIdx}`);
+        if (node) {
+          node.style.transform = '';
+        }
+      });
+    });
   }
 
   resetFormula() {

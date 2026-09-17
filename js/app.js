@@ -325,6 +325,15 @@ document.addEventListener('DOMContentLoaded', () => {
     'stepLogTableBody'
   );
 
+  // Tương tác nhấp trực tiếp vào ô mảng để tự động tìm kiếm giá trị đó
+  visualizer.onSelectTarget = (selectedVal) => {
+    targetX = selectedVal;
+    if (targetXInput) targetXInput.value = selectedVal;
+    sound.playStepSound();
+    initSimulation();
+    startAutoPlay();
+  };
+
   // DOM Elements
   const customArrayInput = document.getElementById('customArrayInput');
   const targetXInput = document.getElementById('targetXInput');
